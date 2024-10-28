@@ -143,7 +143,7 @@ public class Main {
             st = conn.createStatement();
             resultSet = st.executeQuery("select * from cars where id = (select max(id) from cars)");
             resultSet.next();
-                int carId = resultSet.getInt(1);
+            int carId = resultSet.getInt(1);
 
             PreparedStatement userInsert = conn.prepareStatement("insert into customers (name, login, password, phoneNumber, carid) VALUES (?, ?, ?, ?, ?)");
             userInsert.setString(1, name);
@@ -305,4 +305,4 @@ public class Main {
 //        }
 //
 //    }
-    }
+}
