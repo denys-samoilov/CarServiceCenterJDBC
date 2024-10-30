@@ -1,5 +1,8 @@
 package org.example;
 
+import jakarta.persistence.*;
+
+@Entity
 public class Car {
     public Car(int id, String series, int year, Brand brand) {
         this.id = id;
@@ -47,7 +50,10 @@ public class Car {
     public enum Brand{
         Volkswagen, BMW, Opel, Mercedes, Honda, Toyota, Nissan, Subaru, Chevrolet, Ford, Dodge
     }
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
     private Brand brand;
     private String series;
     private int year;
