@@ -1,15 +1,28 @@
 package org.example;
 
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+
+
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
 public class Main {
 
     public static void main(String[] args) {
+        ApplicationContext carSpring = new AnnotationConfigApplicationContext(Car.class);
         String jdbc_url = "jdbc:postgresql://localhost:5432/CarServiceDb";
+
+        SessionFactory sessionFactory = new Configuration().configure("hibernate.cfg.xml").buildSessionFactory();
+        Session session = sessionFactory.openSession();
+
 //        try (var conn = DriverManager.getConnection(jdbc_url, "postgres", "1234")) {
 //            var st = conn.createStatement();
 //            var resultSet = st.executeQuery("select * from cars");
@@ -35,7 +48,7 @@ public class Main {
         ArrayList<Mechanic> mechanicArrayList = new ArrayList<Mechanic>();
         ArrayList<Car> carArrayList = new ArrayList<Car>();
 
-        Mechanic mechanic = new Mechanic(0,"Сергій", "mechanic123", "qwerty123", "+380952278423");
+        Mechanic mechanic = new Mechanic("Сергій", "mechanic123", "qwerty123", "+380952278423");
         mechanicArrayList.add(mechanic);
         userArrayList.add(mechanic);
 
@@ -48,7 +61,7 @@ public class Main {
             switch (k)
             {
                 case 1: {
-                    RegisterUser(userArrayList, customerArrayList, carArrayList,  jdbc_url); break;
+                    RegisterUser(userArrayList, customerArrayList, carArrayList,  jdbc_url, session); break;
                 }
 
                 case 2: {
@@ -84,7 +97,7 @@ public class Main {
         }
     }
 
-    public static void RegisterUser(ArrayList<User> userArrayList, ArrayList<Customer> customerArrayList, ArrayList<Car> carArrayList, String jdbc_url)
+    public static void RegisterUser(ArrayList<User> userArrayList, ArrayList<Customer> customerArrayList, ArrayList<Car> carArrayList, String jdbc_url, Session session)
     {
         Scanner scanner = new Scanner(System.in);
 
@@ -103,9 +116,9 @@ public class Main {
 
 
         System.out.println("Введіть індекс бренду свого автомобіля: ");
-        for(int i = 0; i<Car.Brand.values().length;i++)
+        for(int i = 0; i< Car.BrandId.values().length; i++)
         {
-            System.out.println(i+1 + " " + Car.Brand.values()[i]);
+            System.out.println(i+1 + " " + Car.BrandId.values()[i]);
         }
         int carBrandId = scanner.nextInt()-1;
 
@@ -117,7 +130,7 @@ public class Main {
         System.out.print("Введіть рік автомобіля: ");
         int carYear = scanner.nextInt();
 
-        String brandName = Car.Brand.values()[carBrandId].toString();
+        String brandName = Car.BrandId.values()[carBrandId].toString();
 
 
         try (var conn = DriverManager.getConnection(jdbc_url, "postgres", "1234")) {
@@ -133,39 +146,28 @@ public class Main {
                     return;
                 }
             }
-            PreparedStatement carInsert = conn.prepareStatement("insert into cars (model, year, brandId) VALUES (?, ?, ?)");
-            carInsert.setString(1, carSeries);
-            carInsert.setInt(2, carYear);
-            carInsert.setInt(3, carBrandId);
-
-            carInsert.executeUpdate();
-
+//            PreparedStatement carInsert = conn.prepareStatement("insert into cars (model, year, brandId) VALUES (?, ?, ?)");
+//            carInsert.setString(1, carSeries);
+//            carInsert.setInt(2, carYear);
+//            carInsert.setInt(3, carBrandId);
+//
+//            carInsert.executeUpdate();
+            Car car = new Car(carSeries, carYear, Car.BrandId.values()[carBrandId]);
+            session.beginTransaction();
+            session.save(car);
             st = conn.createStatement();
             resultSet = st.executeQuery("select * from cars where id = (select max(id) from cars)");
             resultSet.next();
             int carId = resultSet.getInt(1);
 
-            PreparedStatement userInsert = conn.prepareStatement("insert into customers (name, login, password, phoneNumber, carid) VALUES (?, ?, ?, ?, ?)");
-            userInsert.setString(1, name);
-            userInsert.setString(2, login);
-            userInsert.setString(3, password);
-            userInsert.setString(4, phone);
-            userInsert.setInt(5, carId);
-            userInsert.executeUpdate();
+            Customer customer = new Customer(name, login, password, phone, car);
+            session.save(customer);
+            session.getTransaction().commit();
 
-            st = conn.createStatement();
-            resultSet = st.executeQuery("select * from customers where id = (select max(id) from customers)");
-            resultSet.next();
-            int customerId = resultSet.getInt(1);
-
-            Car car = new Car(carId, carSeries, carYear, Car.Brand.values()[carBrandId]);
-
-            Customer customer = new Customer(customerId, name, login, password, phone, car);
-            System.out.println("Id користувача: " + customerId);
             userArrayList.add(customer);
             customerArrayList.add(customer);
 
-            System.out.print("Вітаємо, " + name + "! \nВаш автомобіль:" + car.getBrand() + " " + car.getSeries() + " " + car.getYear() + "\nId машини: " + carId + "\n\n");
+            System.out.print("Вітаємо, " + name + "! \nВаш автомобіль:" + car.getBrandId() + " " + car.getModel() + " " + car.getYear() + "\nId машини: " + carId + "\n\n");
 
             conn.commit();
         }
@@ -268,7 +270,7 @@ public class Main {
                 var model = resultSet.getString(2);
                 var year = resultSet.getInt(3);
                 var brandId = resultSet.getInt(4);
-                Car car = new Car(id, model, year, Car.Brand.values()[brandId]);
+                Car car = new Car(model, year, Car.BrandId.values()[brandId]);
                 carArrayList.add(car);
             }
 

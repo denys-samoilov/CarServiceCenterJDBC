@@ -84,7 +84,7 @@ public class Order {
                "Логін замовника: " + customer.getLogin() + "\n" +
                "Ім'я замовника: " + customer.getName() + "\n" +
                "Номер телефону замовника: " + customer.getPhoneNumber() + "\n" +
-               "Машина замовника: " + car.getBrand() + " " + car.getSeries() + " " + car.getYear() + "\n" +
+               "Машина замовника: " + car.getBrandId() + " " + car.getModel() + " " + car.getYear() + "\n" +
                "Ім'я механіка: " + mechanic.getName() + "\n" +
                "Номер телефону механіка: " + mechanic.getPhoneNumber() + "\n" +
                "Опис замовлення: " + description + "\n" +

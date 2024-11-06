@@ -1,10 +1,17 @@
 package org.example;
 
+<<<<<<< Updated upstream
+=======
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "cars")
+>>>>>>> Stashed changes
 public class Car {
-    public Car(int id, String series, int year, Brand brand) {
+    public Car(String series, int year, BrandId brand) {
         this.id = id;
-        this.brand = brand;
-        this.series = series;
+        this.brandId = brand;
+        this.model = series;
         this.year = year;
     }
 
@@ -12,20 +19,20 @@ public class Car {
 
 
 
-    public Brand getBrand() {
-        return brand;
+    public BrandId getBrandId() {
+        return brandId;
     }
 
-    public void setBrand(Brand brand) {
-        this.brand = brand;
+    public void setBrandId(BrandId brandId) {
+        this.brandId = brandId;
     }
 
-    public String getSeries() {
-        return series;
+    public String getModel() {
+        return model;
     }
 
-    public void setSeries(String series) {
-        this.series = series;
+    public void setModel(String model) {
+        this.model = model;
     }
 
     public int getYear() {
@@ -44,12 +51,18 @@ public class Car {
         this.id = id;
     }
 
-    public enum Brand{
+    public enum BrandId {
         Volkswagen, BMW, Opel, Mercedes, Honda, Toyota, Nissan, Subaru, Chevrolet, Ford, Dodge
     }
     private int id;
+<<<<<<< Updated upstream
     private Brand brand;
     private String series;
+=======
+
+    private BrandId brandId;
+    private String model;
+>>>>>>> Stashed changes
     private int year;
 
 }
