@@ -1,15 +1,32 @@
 package org.example;
 
+import org.example.AppConfig;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
+
+
 public class Main {
 
     public static void main(String[] args) {
         String jdbc_url = "jdbc:postgresql://localhost:5432/CarServiceDb";
+
+        ApplicationContext spring = new AnnotationConfigApplicationContext(AppConfig.class);
+        AppConfig appConf = spring.getBean(AppConfig.class);
+
+        SessionFactory sessionFactory = appConf.sessionFactory();
+        Session session = sessionFactory.openSession();
 //        try (var conn = DriverManager.getConnection(jdbc_url, "postgres", "1234")) {
 //            var st = conn.createStatement();
 //            var resultSet = st.executeQuery("select * from cars");
@@ -48,7 +65,7 @@ public class Main {
             switch (k)
             {
                 case 1: {
-                    RegisterUser(userArrayList, customerArrayList, carArrayList,  jdbc_url); break;
+                    RegisterUser(userArrayList, customerArrayList, carArrayList,  jdbc_url, session); break;
                 }
 
                 case 2: {
@@ -84,7 +101,7 @@ public class Main {
         }
     }
 
-    public static void RegisterUser(ArrayList<User> userArrayList, ArrayList<Customer> customerArrayList, ArrayList<Car> carArrayList, String jdbc_url)
+    public static void RegisterUser(ArrayList<User> userArrayList, ArrayList<Customer> customerArrayList, ArrayList<Car> carArrayList, String jdbc_url, Session session)
     {
         Scanner scanner = new Scanner(System.in);
 
@@ -133,39 +150,51 @@ public class Main {
                     return;
                 }
             }
-            PreparedStatement carInsert = conn.prepareStatement("insert into cars (model, year, brandId) VALUES (?, ?, ?)");
-            carInsert.setString(1, carSeries);
-            carInsert.setInt(2, carYear);
-            carInsert.setInt(3, carBrandId);
+            //PreparedStatement carInsert = conn.prepareStatement("insert into cars (model, year, brandId) VALUES (?, ?, ?)");
+            //carInsert.setString(1, carSeries);
+           // carInsert.setInt(2, carYear);
+            //carInsert.setInt(3, carBrandId);
 
-            carInsert.executeUpdate();
+            //carInsert.executeUpdate();
+
+            session.beginTransaction();
+            Car car = new Car(carSeries, Car.Brand.values()[carBrandId], carYear);
+            session.save(car);
 
             st = conn.createStatement();
             resultSet = st.executeQuery("select * from cars where id = (select max(id) from cars)");
             resultSet.next();
             int carId = resultSet.getInt(1);
 
-            PreparedStatement userInsert = conn.prepareStatement("insert into customers (name, login, password, phoneNumber, carid) VALUES (?, ?, ?, ?, ?)");
-            userInsert.setString(1, name);
-            userInsert.setString(2, login);
-            userInsert.setString(3, password);
-            userInsert.setString(4, phone);
-            userInsert.setInt(5, carId);
-            userInsert.executeUpdate();
+            Customer customer = new Customer(name, login, password, phone, car);
+
+            session.save(customer);
+
+            session.getTransaction().commit();
+
+
+
+
+//            PreparedStatement userInsert = conn.prepareStatement("insert into customers (name, login, password, phoneNumber, carid) VALUES (?, ?, ?, ?, ?)");
+//            userInsert.setString(1, name);
+//            userInsert.setString(2, login);
+//            userInsert.setString(3, password);
+//            userInsert.setString(4, phone);
+//            userInsert.setInt(5, carId);
+//            userInsert.executeUpdate();
 
             st = conn.createStatement();
             resultSet = st.executeQuery("select * from customers where id = (select max(id) from customers)");
             resultSet.next();
             int customerId = resultSet.getInt(1);
 
-            Car car = new Car(carId, carSeries, carYear, Car.Brand.values()[carBrandId]);
 
-            Customer customer = new Customer(customerId, name, login, password, phone, car);
-            System.out.println("Id користувача: " + customerId);
+
+
             userArrayList.add(customer);
             customerArrayList.add(customer);
 
-            System.out.print("Вітаємо, " + name + "! \nВаш автомобіль:" + car.getBrand() + " " + car.getSeries() + " " + car.getYear() + "\nId машини: " + carId + "\n\n");
+            System.out.print("Вітаємо, " + name + "! \nВаш автомобіль:" + car.getBrand() + " " + car.getModel() + " " + car.getYear() + "\nId машини: " + carId + "\n\n");
 
             conn.commit();
         }
@@ -268,7 +297,7 @@ public class Main {
                 var model = resultSet.getString(2);
                 var year = resultSet.getInt(3);
                 var brandId = resultSet.getInt(4);
-                Car car = new Car(id, model, year, Car.Brand.values()[brandId]);
+                Car car = new Car(model, Car.Brand.values()[brandId], year);
                 carArrayList.add(car);
             }
 

@@ -3,11 +3,12 @@ package org.example;
 import jakarta.persistence.*;
 
 @Entity
+@Table(name = "cars")
+
 public class Car {
-    public Car(int id, String series, int year, Brand brand) {
-        this.id = id;
-        this.brand = brand;
-        this.series = series;
+    public Car (String model, Brand brand, int year) {
+        this.brandId = brand;
+        this.model = model;
         this.year = year;
     }
 
@@ -16,19 +17,19 @@ public class Car {
 
 
     public Brand getBrand() {
-        return brand;
+        return Brand.values()[id];
     }
 
     public void setBrand(Brand brand) {
-        this.brand = brand;
+        this.brandId = brand;
     }
 
-    public String getSeries() {
-        return series;
+    public String getModel() {
+        return model;
     }
 
-    public void setSeries(String series) {
-        this.series = series;
+    public void setModel(String model) {
+        this.model = model;
     }
 
     public int getYear() {
@@ -54,8 +55,8 @@ public class Car {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    private Brand brand;
-    private String series;
+    private Brand brandId;
+    private String model;
     private int year;
 
 }
